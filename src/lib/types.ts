@@ -129,3 +129,16 @@ export interface AuthTokens {
   expires_at: number;
   user: { id: string; email: string } | null;
 }
+
+export interface RefreshResponse {
+  access_token: string;
+  refresh_token?: string;
+  expires_at: number;
+}
+
+export interface UploadResponse {
+  url: string;
+  path: string;
+  size: number;
+  content_type: string;
+}

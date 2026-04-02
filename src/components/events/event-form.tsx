@@ -3,10 +3,12 @@
 import { useActionState, useState } from "react";
 import { createEventAction, updateEventAction } from "@/actions/event-actions";
 import { CATEGORY_LABELS } from "@/lib/constants";
+import { ImageUpload } from "@/components/events/image-upload";
 import type { Event } from "@/lib/types";
 
 interface TierInput {
   key: string;
+  id?: string;
   name: string;
   price: number;
   capacity: number;
@@ -34,10 +36,12 @@ export function EventForm({ categories, initialData }: EventFormProps) {
   const isEdit = !!initialData;
   const action = isEdit ? updateEventAction : createEventAction;
   const [state, formAction, pending] = useActionState(action, null);
+  const [coverImageUrl, setCoverImageUrl] = useState(initialData?.cover_image_url || "");
 
   const [tiers, setTiers] = useState<TierInput[]>(
     initialData?.tiers?.map((t) => ({
       key: t.id,
+      id: t.id,
       name: t.name,
       price: t.price,
       capacity: t.capacity,
@@ -67,7 +71,8 @@ export function EventForm({ categories, initialData }: EventFormProps) {
         type="hidden"
         name="tiers"
         value={JSON.stringify(
-          tiers.map(({ name, price, capacity, min_per_order, max_per_order }) => ({
+          tiers.map(({ id, name, price, capacity, min_per_order, max_per_order }) => ({
+            id,
             name,
             price,
             capacity,
@@ -105,7 +110,16 @@ export function EventForm({ categories, initialData }: EventFormProps) {
 
         <div className="space-y-2">
           <label htmlFor="cover_image_url" className="text-sm font-medium">URL de l&apos;image de couverture</label>
-          <input id="cover_image_url" name="cover_image_url" type="url" defaultValue={initialData?.cover_image_url || ""} placeholder="https://..." className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+          <input
+            id="cover_image_url"
+            name="cover_image_url"
+            type="url"
+            value={coverImageUrl}
+            onChange={(e) => setCoverImageUrl(e.target.value)}
+            placeholder="https://..."
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          />
+          <ImageUpload value={coverImageUrl || null} onChange={(url) => setCoverImageUrl(url || "")} />
         </div>
       </fieldset>
 
@@ -149,37 +163,35 @@ export function EventForm({ categories, initialData }: EventFormProps) {
         </div>
       </fieldset>
 
-      {!isEdit && (
-        <fieldset className="space-y-4 rounded-lg border p-4">
-          <legend className="px-2 text-sm font-semibold">Tarifs *</legend>
+      <fieldset className="space-y-4 rounded-lg border p-4">
+        <legend className="px-2 text-sm font-semibold">Tarifs *</legend>
 
-          {tiers.map((tier) => (
-            <div key={tier.key} className="grid gap-3 sm:grid-cols-4 items-end rounded-md border p-3">
-              <div className="space-y-1 sm:col-span-2">
-                <label className="text-xs font-medium">Nom</label>
-                <input value={tier.name} onChange={(e) => updateTier(tier.key, "name", e.target.value)} placeholder="Ex: VIP, General" required className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium">Prix (XOF)</label>
-                <input type="number" min={0} value={tier.price} onChange={(e) => updateTier(tier.key, "price", parseInt(e.target.value) || 0)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium">Capacité</label>
-                <input type="number" min={1} value={tier.capacity} onChange={(e) => updateTier(tier.key, "capacity", parseInt(e.target.value) || 1)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm" />
-              </div>
-              {tiers.length > 1 && (
-                <button type="button" onClick={() => removeTier(tier.key)} className="text-xs text-destructive hover:underline sm:col-span-4 text-right">
-                  Supprimer ce tarif
-                </button>
-              )}
+        {tiers.map((tier) => (
+          <div key={tier.key} className="grid gap-3 sm:grid-cols-4 items-end rounded-md border p-3">
+            <div className="space-y-1 sm:col-span-2">
+              <label className="text-xs font-medium">Nom</label>
+              <input value={tier.name} onChange={(e) => updateTier(tier.key, "name", e.target.value)} placeholder="Ex: VIP, General" required className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm" />
             </div>
-          ))}
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Prix (XOF)</label>
+              <input type="number" min={0} value={tier.price} onChange={(e) => updateTier(tier.key, "price", parseInt(e.target.value) || 0)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Capacité</label>
+              <input type="number" min={1} value={tier.capacity} onChange={(e) => updateTier(tier.key, "capacity", parseInt(e.target.value) || 1)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm" />
+            </div>
+            {tiers.length > 1 && (
+              <button type="button" onClick={() => removeTier(tier.key)} className="text-xs text-destructive hover:underline sm:col-span-4 text-right">
+                Supprimer ce tarif
+              </button>
+            )}
+          </div>
+        ))}
 
-          <button type="button" onClick={addTier} className="inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium hover:bg-muted">
-            + Ajouter un tarif
-          </button>
-        </fieldset>
-      )}
+        <button type="button" onClick={addTier} className="inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium hover:bg-muted">
+          + Ajouter un tarif
+        </button>
+      </fieldset>
 
       <fieldset className="space-y-4 rounded-lg border p-4">
         <legend className="px-2 text-sm font-semibold">Règles</legend>

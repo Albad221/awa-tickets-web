@@ -59,6 +59,14 @@ export async function updateEventAction(
 ): Promise<{ error?: string } | null> {
   const eventId = formData.get("event_id") as string;
   const body: Record<string, unknown> = {};
+  const tiersJson = formData.get("tiers") as string;
+  let tiers = [];
+
+  try {
+    tiers = JSON.parse(tiersJson || "[]");
+  } catch {
+    return { error: "Format des tarifs invalide" };
+  }
 
   // Required fields — always include if present
   const requiredFields = ["title", "venue_name", "venue_city", "starts_at", "ends_at", "category"];
@@ -79,6 +87,11 @@ export async function updateEventAction(
   // Booleans — unchecked checkboxes don't submit, so explicitly set false
   body.allow_transfers = formData.get("allow_transfers") === "on";
   body.allow_refunds = formData.get("allow_refunds") === "on";
+  body.tiers = tiers;
+
+  if (tiers.length === 0) {
+    return { error: "Au moins un tarif est requis" };
+  }
 
   try {
     await apiFetch(`/api/events/${eventId}`, { method: "PATCH", body });

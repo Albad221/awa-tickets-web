@@ -112,6 +112,7 @@ export default async function EventDetailPage({
                 alt={event.title}
                 fill
                 className="object-cover"
+                unoptimized
               />
             </div>
           )}

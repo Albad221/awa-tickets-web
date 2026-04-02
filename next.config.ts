@@ -11,11 +11,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.imgur.com" },
     ],
   },
-  async redirects() {
-    return [
-      { source: "/", destination: "/events", permanent: false },
-    ];
-  },
 };
 
 export default nextConfig;

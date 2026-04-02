@@ -62,8 +62,67 @@ export interface Event {
   currency: string;
   status: EventStatus;
   tiers?: TicketTier[];
+  ticket_tiers?: TicketTier[];
   created_at: string;
   updated_at: string;
+}
+
+export interface BuyerOrder {
+  id: string;
+  user_id: string;
+  event_id: string;
+  tier_id: string;
+  order_number: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  service_fee: number;
+  total: number;
+  currency: string;
+  status: string;
+  expires_at: string | null;
+  created_at: string;
+}
+
+export interface BuyerTicket {
+  id: string;
+  event_id: string;
+  order_id: string;
+  tier_id: string;
+  holder_id: string;
+  ticket_number: string;
+  qr_payload: string;
+  status: string;
+  created_at: string;
+  events?: {
+    title: string;
+    starts_at: string;
+    venue_name: string;
+    venue_city: string;
+  } | null;
+}
+
+export interface PaymentStatus {
+  id: string;
+  order_id: string;
+  status: string;
+  provider: string;
+  amount: number;
+  currency: string;
+}
+
+export interface CheckoutState {
+  orderId: string;
+  orderNumber: string;
+  eventId: string;
+  eventTitle: string;
+  tierName: string;
+  quantity: number;
+  total: number;
+  currency: string;
+  paymentId: string;
+  providerSessionId: string;
+  waveLaunchUrl: string | null;
 }
 
 export interface EventDashboard {

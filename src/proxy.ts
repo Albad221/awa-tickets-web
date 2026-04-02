@@ -5,7 +5,8 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:8002";
 
-const PUBLIC_PATHS = ["/login", "/register", "/auth/"];
+const PUBLIC_PATHS = ["/", "/catalog", "/checkout", "/my-tickets", "/login", "/register", "/auth/"];
+const PROTECTED_PATHS = ["/events", "/profile", "/payouts", "/settings"];
 
 function cookieOptions(maxAge: number) {
   return {
@@ -20,7 +21,13 @@ function cookieOptions(maxAge: number) {
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  if (
+    PUBLIC_PATHS.some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)))
+  ) {
+    return NextResponse.next();
+  }
+
+  if (!PROTECTED_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 

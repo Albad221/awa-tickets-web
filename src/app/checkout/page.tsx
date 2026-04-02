@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ExternalLink, ShieldCheck, TicketCheck } from "lucide-react";
+import { ReconcilePaymentForm } from "@/components/buyer/reconcile-payment-form";
 import { SimulatePaymentForm } from "@/components/buyer/simulate-payment-form";
 import { BuyerSiteShell } from "@/components/buyer/site-shell";
 import { BUYER_LAB_MODE, buyerApiFetch } from "@/lib/buyer-api";
@@ -10,12 +11,30 @@ import type { PaymentStatus } from "@/lib/types";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-export default async function CheckoutPage() {
+export default async function CheckoutPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ payment?: string }>;
+}) {
+  const params = (await searchParams) ?? {};
   const [buyer, checkout] = await Promise.all([getBuyerIdentity(), getCheckoutState()]);
 
   let payment: PaymentStatus | null = null;
+  let reconcileMessage: string | null = null;
   if (buyer?.phone && checkout?.paymentId) {
     try {
+      if (params.payment === "success") {
+        const reconciliation = await buyerApiFetch<{
+          status: string;
+          payment_status: string;
+          order_status: string | null;
+        }>(`/api/payments/${checkout.paymentId}/reconcile`, buyer.phone, {
+          method: "POST",
+        });
+        if (reconciliation.status === "confirmed" || reconciliation.payment_status === "succeeded") {
+          reconcileMessage = "Paiement confirmé. Les billets sont maintenant disponibles.";
+        }
+      }
       payment = await buyerApiFetch<PaymentStatus>(
         `/api/payments/${checkout.paymentId}/status`,
         buyer.phone
@@ -89,6 +108,12 @@ export default async function CheckoutPage() {
                 </a>
               )}
 
+              {reconcileMessage && (
+                <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+                  {reconcileMessage}
+                </div>
+              )}
+
               <div className="rounded-3xl border border-slate-200 bg-white p-5">
                 <div className="flex items-start gap-3">
                   <ShieldCheck className="mt-0.5 h-5 w-5 text-sky-700" />
@@ -104,6 +129,7 @@ export default async function CheckoutPage() {
 
             <div className="space-y-5">
               {BUYER_LAB_MODE && <SimulatePaymentForm />}
+              {payment?.status !== "succeeded" && <ReconcilePaymentForm />}
 
               <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex items-start gap-3">

@@ -145,3 +145,31 @@ export async function simulateBuyerPaymentAction(): Promise<ActionState> {
     };
   }
 }
+
+export async function reconcileBuyerPaymentAction(): Promise<ActionState> {
+  const identity = await getBuyerIdentity();
+  const checkout = await getCheckoutState();
+
+  if (!identity?.phone || !checkout?.paymentId) {
+    return { error: "Aucun paiement à vérifier." };
+  }
+
+  try {
+    await buyerApiFetch(`/api/payments/${checkout.paymentId}/reconcile`, identity.phone, {
+      method: "POST",
+    });
+    revalidatePath("/checkout");
+    revalidatePath("/my-tickets");
+    return null;
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Impossible de vérifier le paiement pour le moment.",
+    };
+  }
+}

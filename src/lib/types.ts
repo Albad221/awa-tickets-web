@@ -109,6 +109,8 @@ export interface PaymentStatus {
   provider: string;
   amount: number;
   currency: string;
+  provider_session_id?: string | null;
+  order_status?: string | null;
 }
 
 export interface CheckoutState {

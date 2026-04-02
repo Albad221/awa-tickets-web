@@ -27,6 +27,7 @@ export async function createEventAction(
     starts_at: formData.get("starts_at") as string,
     ends_at: formData.get("ends_at") as string,
     doors_open_at: (formData.get("doors_open_at") as string) || null,
+    qr_release_mode: (formData.get("qr_release_mode") as string) || "12h_before_event",
     cover_image_url: (formData.get("cover_image_url") as string) || null,
     allow_transfers: formData.get("allow_transfers") === "on",
     allow_refunds: formData.get("allow_refunds") === "on",
@@ -69,7 +70,7 @@ export async function updateEventAction(
   }
 
   // Required fields — always include if present
-  const requiredFields = ["title", "venue_name", "venue_city", "starts_at", "ends_at", "category"];
+  const requiredFields = ["title", "venue_name", "venue_city", "starts_at", "ends_at", "category", "qr_release_mode"];
   for (const field of requiredFields) {
     const value = formData.get(field) as string;
     if (value) {

@@ -161,6 +161,22 @@ export function EventForm({ categories, initialData }: EventFormProps) {
           <label htmlFor="doors_open_at" className="text-sm font-medium">Ouverture des portes</label>
           <input id="doors_open_at" name="doors_open_at" type="datetime-local" defaultValue={initialData?.doors_open_at?.slice(0, 16) || ""} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
         </div>
+
+        <div className="space-y-2">
+          <label htmlFor="qr_release_mode" className="text-sm font-medium">Disponibilité du QR</label>
+          <select
+            id="qr_release_mode"
+            name="qr_release_mode"
+            defaultValue={initialData?.qr_release_mode || "12h_before_event"}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="12h_before_event">12h avant l&apos;événement</option>
+            <option value="automatic">Dès l&apos;émission du billet</option>
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Choisissez si le QR doit être visible immédiatement ou seulement 12 heures avant le début.
+          </p>
+        </div>
       </fieldset>
 
       <fieldset className="space-y-4 rounded-lg border p-4">

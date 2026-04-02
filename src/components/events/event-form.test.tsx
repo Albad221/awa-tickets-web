@@ -30,6 +30,7 @@ describe("EventForm", () => {
           starts_at: "2026-04-10T20:00:00+00:00",
           ends_at: "2026-04-10T22:00:00+00:00",
           doors_open_at: null,
+          qr_release_mode: "12h_before_event",
           timezone: "Africa/Dakar",
           cover_image_url: null,
           gallery: [],

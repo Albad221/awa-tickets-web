@@ -1,6 +1,7 @@
 export type EventStatus = "draft" | "published" | "sold_out" | "completed" | "cancelling" | "cancelled";
 export type KycStatus = "pending" | "submitted" | "verified" | "rejected";
 export type PayoutStatus = "pending" | "processing" | "paid" | "failed";
+export type QrReleaseMode = "automatic" | "12h_before_event";
 
 export interface OrganizerSession {
   id: string;
@@ -52,6 +53,7 @@ export interface Event {
   starts_at: string;
   ends_at: string;
   doors_open_at: string | null;
+  qr_release_mode: QrReleaseMode;
   timezone: string;
   cover_image_url: string | null;
   gallery: string[];
@@ -106,6 +108,7 @@ export interface BuyerTicket {
     starts_at: string;
     ends_at: string;
     doors_open_at?: string | null;
+    qr_release_mode?: QrReleaseMode;
     venue_name?: string | null;
     venue_city?: string | null;
     venue_address?: string | null;

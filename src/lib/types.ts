@@ -91,14 +91,39 @@ export interface BuyerTicket {
   tier_id: string;
   holder_id: string;
   ticket_number: string;
-  qr_payload: string;
+  qr_payload: string | null;
   status: string;
+  qr_available?: boolean;
+  qr_release_at?: string | null;
+  delivery_state?: string;
+  entry_gates?: string[];
+  ticket_url?: string | null;
+  wallet_url?: string | null;
+  event?: {
+    id: string;
+    title: string;
+    category?: string | null;
+    starts_at: string;
+    ends_at: string;
+    doors_open_at?: string | null;
+    venue_name?: string | null;
+    venue_city?: string | null;
+    venue_address?: string | null;
+  } | null;
+  tier?: {
+    id: string;
+    name: string;
+    price: number;
+    currency: string;
+  } | null;
   created_at: string;
   events?: {
     title: string;
     starts_at: string;
     venue_name: string;
     venue_city: string;
+    ends_at?: string;
+    doors_open_at?: string | null;
   } | null;
 }
 
@@ -111,6 +136,11 @@ export interface PaymentStatus {
   currency: string;
   provider_session_id?: string | null;
   order_status?: string | null;
+  delivery_state?: string;
+  wallet_url?: string | null;
+  ticket_ids?: string[];
+  next_action?: string | null;
+  qr_release_at?: string | null;
 }
 
 export interface CheckoutState {

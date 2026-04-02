@@ -28,11 +28,14 @@ export default async function CheckoutPage({
           status: string;
           payment_status: string;
           order_status: string | null;
+          wallet_url?: string | null;
+          delivery_state?: string;
+          next_action?: string | null;
         }>(`/api/payments/${checkout.paymentId}/reconcile`, buyer.phone, {
           method: "POST",
         });
         if (reconciliation.status === "confirmed" || reconciliation.payment_status === "succeeded") {
-          reconcileMessage = "Paiement confirmé. Les billets sont maintenant disponibles.";
+          reconcileMessage = reconciliation.next_action || "Paiement confirmé. Les billets sont maintenant disponibles.";
         }
       }
       payment = await buyerApiFetch<PaymentStatus>(
@@ -77,7 +80,7 @@ export default async function CheckoutPage({
                   <h2 className="text-2xl font-semibold text-slate-950">{checkout.orderNumber}</h2>
                 </div>
                 <span className="rounded-full bg-sky-100 px-3 py-1 text-sm font-semibold text-sky-700">
-                  {payment?.status || "processing"}
+                  {payment?.delivery_state || payment?.status || "processing"}
                 </span>
               </div>
 
@@ -114,6 +117,12 @@ export default async function CheckoutPage({
                 </div>
               )}
 
+              {payment?.next_action && !reconcileMessage && (
+                <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-700">
+                  {payment.next_action}
+                </div>
+              )}
+
               <div className="rounded-3xl border border-slate-200 bg-white p-5">
                 <div className="flex items-start gap-3">
                   <ShieldCheck className="mt-0.5 h-5 w-5 text-sky-700" />
@@ -137,10 +146,10 @@ export default async function CheckoutPage({
                   <div>
                     <h3 className="text-lg font-semibold text-slate-950">Vérifier les billets</h3>
                     <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Une fois le statut passé à <strong>succeeded</strong>, ouvrez le wallet acheteur pour confirmer que les billets sont visibles.
+                      Une fois l&apos;émission terminée, ouvrez le wallet acheteur pour confirmer que les billets sont visibles.
                     </p>
                     <Link
-                      href="/my-tickets"
+                      href={payment?.wallet_url || "/my-tickets"}
                       className="mt-4 inline-flex h-11 items-center justify-center rounded-full border border-slate-300 px-5 text-sm font-semibold text-slate-900 hover:border-slate-400"
                     >
                       Ouvrir mes billets

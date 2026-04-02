@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyBuyerClaimToken } from "@/lib/buyer-link";
 
 const API_BASE_URL =
   process.env.TICKETS_API_URL ||
@@ -7,6 +8,14 @@ const API_BASE_URL =
 
 const PUBLIC_PATHS = ["/", "/catalog", "/checkout", "/my-tickets", "/login", "/register", "/auth/"];
 const PROTECTED_PATHS = ["/events", "/profile", "/payouts", "/settings"];
+const BUYER_PHONE_COOKIE = "buyer_phone";
+const BUYER_NAME_COOKIE = "buyer_name";
+const BUYER_EMAIL_COOKIE = "buyer_email";
+const BUYER_LINK_SECRET =
+  process.env.BUYER_LINK_SECRET ||
+  process.env.TICKETS_INTERNAL_API_KEY ||
+  process.env.INTERNAL_API_KEY ||
+  "";
 
 function cookieOptions(maxAge: number) {
   return {
@@ -20,6 +29,22 @@ function cookieOptions(maxAge: number) {
 
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const claimToken = request.nextUrl.searchParams.get("claim");
+
+  if (claimToken) {
+    const nextUrl = new URL(request.url);
+    nextUrl.searchParams.delete("claim");
+    const response = NextResponse.redirect(nextUrl);
+    const claim = await verifyBuyerClaimToken(claimToken, BUYER_LINK_SECRET);
+
+    if (claim?.phone) {
+      response.cookies.set(BUYER_PHONE_COOKIE, claim.phone, cookieOptions(30 * 24 * 3600));
+      response.cookies.delete(BUYER_NAME_COOKIE);
+      response.cookies.delete(BUYER_EMAIL_COOKIE);
+    }
+
+    return response;
+  }
 
   if (
     PUBLIC_PATHS.some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)))

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { clearBuyerIdentityAction } from "@/actions/buyer-actions";
 import { BuyerIdentityForm } from "@/components/buyer/buyer-identity-form";
 import { BuyerSiteShell } from "@/components/buyer/site-shell";
+import { TicketQr } from "@/components/buyer/ticket-qr";
 import { buyerApiFetch } from "@/lib/buyer-api";
 import { getBuyerIdentity } from "@/lib/buyer-session";
 import { formatCFA, formatDateTime } from "@/lib/format";
@@ -113,20 +114,40 @@ export default async function BuyerTicketsPage() {
                     ) : (
                       tickets.map((ticket) => (
                         <div key={ticket.id} className="rounded-3xl border border-slate-200 p-4">
-                          <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="grid gap-4 md:grid-cols-[180px_1fr]">
+                            <TicketQr payload={ticket.qr_payload} size={180} className="mx-auto md:mx-0" />
                             <div>
-                              <p className="text-sm text-slate-500">{ticket.ticket_number}</p>
-                              <p className="mt-1 text-lg font-semibold text-slate-950">
-                                {ticket.events?.title || "Billet"}
-                              </p>
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                  <p className="text-sm text-slate-500">{ticket.ticket_number}</p>
+                                  <p className="mt-1 text-lg font-semibold text-slate-950">
+                                    {ticket.events?.title || "Billet"}
+                                  </p>
+                                </div>
+                                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                                  {ticket.status}
+                                </span>
+                              </div>
+                              <div className="mt-3 space-y-1 text-sm text-slate-600">
+                                <p>{ticket.events?.venue_name || "Lieu à confirmer"} · {ticket.events?.venue_city || "—"}</p>
+                                {ticket.events?.starts_at && <p>{formatDateTime(ticket.events.starts_at)}</p>}
+                              </div>
+                              <div className="mt-4 flex flex-wrap gap-3">
+                                <Link
+                                  href={`/my-tickets/${ticket.id}`}
+                                  className="inline-flex h-10 items-center justify-center rounded-full bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-slate-800"
+                                >
+                                  Voir le billet
+                                </Link>
+                                <Link
+                                  href={`/my-tickets/${ticket.id}`}
+                                  target="_blank"
+                                  className="inline-flex h-10 items-center justify-center rounded-full border border-slate-300 px-4 text-sm font-semibold text-slate-900 hover:border-slate-400"
+                                >
+                                  PDF / impression
+                                </Link>
+                              </div>
                             </div>
-                            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
-                              {ticket.status}
-                            </span>
-                          </div>
-                          <div className="mt-3 space-y-1 text-sm text-slate-600">
-                            <p>{ticket.events?.venue_name || "Lieu à confirmer"} · {ticket.events?.venue_city || "—"}</p>
-                            {ticket.events?.starts_at && <p>{formatDateTime(ticket.events.starts_at)}</p>}
                           </div>
                         </div>
                       ))

@@ -198,6 +198,78 @@ export interface ScanStats {
   admitted: number;
 }
 
+export interface StaffUser {
+  id: string;
+  organizer_id: string;
+  phone: string;
+  display_name: string;
+  status: "active" | "inactive" | "deleted";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventStaffAssignment {
+  id: string;
+  event_id: string;
+  staff_user_id: string;
+  role: "event_lead" | "scanner" | "support";
+  allowed_gates: string[];
+  status: "active" | "revoked";
+  created_at: string;
+  updated_at: string;
+  staff_users?: StaffUser;
+}
+
+export interface ScanOpsScanner {
+  session_id: string;
+  session_kind: "organizer_link" | "staff_claimed";
+  gate_name: string;
+  device_id?: string | null;
+  device_name?: string | null;
+  device_label?: string | null;
+  status: "active" | "paused" | "revoked";
+  app_version?: string | null;
+  started_at?: string | null;
+  last_heartbeat_at?: string | null;
+  last_used_at?: string | null;
+  pending_queue_count: number;
+  is_stale: boolean;
+  staff_user?: StaffUser | null;
+}
+
+export interface ScanOpsAlert {
+  type: string;
+  session_id?: string;
+  message: string;
+}
+
+export interface RecentScanEvent {
+  id: string;
+  scanned_at: string;
+  result: "admitted" | "already_used" | "invalid" | "wrong_event" | "expired";
+  ticket_id?: string | null;
+  ticket_number?: string | null;
+  session_id?: string | null;
+  gate_name?: string | null;
+  device_name?: string | null;
+  staff_name?: string | null;
+}
+
+export interface ScanOpsResponse {
+  event_id: string;
+  stats: ScanStats;
+  by_gate: {
+    gate_name: string;
+    admitted: number;
+    total_scans: number;
+    active_scanners: number;
+  }[];
+  scanners: ScanOpsScanner[];
+  roster: EventStaffAssignment[];
+  recent_scans: RecentScanEvent[];
+  alerts: ScanOpsAlert[];
+}
+
 export interface PayoutBatch {
   id: string;
   organizer_id: string;

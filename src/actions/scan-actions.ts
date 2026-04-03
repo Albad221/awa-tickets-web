@@ -43,3 +43,84 @@ export async function revokeScanSessionAction(sessionId: string, eventId: string
     return { error: error instanceof Error ? error.message : "Erreur lors de la révocation" };
   }
 }
+
+export async function pauseScanSessionAction(sessionId: string, eventId: string): Promise<{ error?: string }> {
+  try {
+    await apiFetch(`/api/scan/sessions/${sessionId}/pause`, { method: "POST" });
+    revalidatePath(`/events/${eventId}/scan`);
+    return {};
+  } catch (error) {
+    if (isRedirectError(error)) throw error;
+    return { error: error instanceof Error ? error.message : "Erreur lors de la mise en pause" };
+  }
+}
+
+export async function resumeScanSessionAction(sessionId: string, eventId: string): Promise<{ error?: string }> {
+  try {
+    await apiFetch(`/api/scan/sessions/${sessionId}/resume`, { method: "POST" });
+    revalidatePath(`/events/${eventId}/scan`);
+    return {};
+  } catch (error) {
+    if (isRedirectError(error)) throw error;
+    return { error: error instanceof Error ? error.message : "Erreur lors de la reprise" };
+  }
+}
+
+export async function createStaffUserAction(
+  _prevState: { error?: string } | null,
+  formData: FormData
+): Promise<{ error?: string } | null> {
+  const eventId = formData.get("event_id") as string;
+  const displayName = (formData.get("display_name") as string)?.trim();
+  const phone = (formData.get("phone") as string)?.trim();
+
+  if (!displayName || !phone) {
+    return { error: "Nom et téléphone requis" };
+  }
+
+  try {
+    await apiFetch("/api/staff/users", {
+      method: "POST",
+      body: { display_name: displayName, phone, status: "active" },
+    });
+    revalidatePath(`/events/${eventId}/scan`);
+    return {};
+  } catch (error) {
+    if (isRedirectError(error)) throw error;
+    return { error: error instanceof Error ? error.message : "Erreur lors de la création du staff" };
+  }
+}
+
+export async function assignStaffToEventAction(
+  _prevState: { error?: string } | null,
+  formData: FormData
+): Promise<{ error?: string } | null> {
+  const eventId = formData.get("event_id") as string;
+  const staffUserId = formData.get("staff_user_id") as string;
+  const role = (formData.get("role") as string) || "scanner";
+  const allowedGatesRaw = (formData.get("allowed_gates") as string) || "";
+  const allowedGates = allowedGatesRaw
+    .split(",")
+    .map((gate) => gate.trim())
+    .filter(Boolean);
+
+  if (!staffUserId) {
+    return { error: "Sélectionnez un membre du staff" };
+  }
+
+  try {
+    await apiFetch(`/api/staff/events/${eventId}/assignments`, {
+      method: "POST",
+      body: {
+        staff_user_id: staffUserId,
+        role,
+        allowed_gates: allowedGates,
+      },
+    });
+    revalidatePath(`/events/${eventId}/scan`);
+    return {};
+  } catch (error) {
+    if (isRedirectError(error)) throw error;
+    return { error: error instanceof Error ? error.message : "Erreur lors de l'assignation" };
+  }
+}

@@ -5,7 +5,7 @@ import { PrintTicketButton } from "@/components/buyer/print-ticket-button";
 import { TicketQr } from "@/components/buyer/ticket-qr";
 import { buyerApiFetch } from "@/lib/buyer-api";
 import { getBuyerIdentity } from "@/lib/buyer-session";
-import { formatDateTime, formatRelative } from "@/lib/format";
+import { formatCFA, formatDateTime, formatRelative } from "@/lib/format";
 import type { BuyerTicket } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -33,12 +33,26 @@ export default async function BuyerTicketDetailPage({
   if (!event) {
     notFound();
   }
+
   const tier = ticket.tier;
   const venue = [event.venue_name, event.venue_city].filter(Boolean).join(", ") || "Lieu à confirmer";
+  const priceLabel =
+    typeof tier?.price === "number"
+      ? tier.currency === "XOF"
+        ? formatCFA(tier.price)
+        : `${tier.price} ${tier.currency}`
+      : null;
+  const status = statusMeta(ticket.delivery_state, ticket.status);
+  const category = event.category || "Billet événement";
+  const qrAvailability = ticket.qr_available
+    ? "Disponible maintenant"
+    : ticket.qr_release_at
+      ? `Ouverture ${formatRelative(ticket.qr_release_at)}`
+      : "12h avant l'événement";
 
   return (
     <BuyerSiteShell buyer={buyer}>
-      <section className="mx-auto max-w-4xl px-4 py-6 sm:py-10 md:px-8 md:py-12 print:max-w-none print:px-0 print:py-0">
+      <section className="mx-auto max-w-5xl px-4 py-6 sm:py-10 md:px-8 md:py-12 print:max-w-none print:px-0 print:py-0">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between print:hidden">
           <Link
             href="/my-tickets"
@@ -50,7 +64,7 @@ export default async function BuyerTicketDetailPage({
             <Link
               href={ticket.pdf_url || `/api/buyer/tickets/${ticket.id}/pdf`}
               target="_blank"
-              className="inline-flex h-11 items-center justify-center rounded-full border border-slate-300 px-5 text-sm font-semibold text-slate-900 hover:border-slate-400"
+              className="inline-flex h-11 items-center justify-center rounded-full border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 hover:border-slate-400"
             >
               Télécharger PDF
             </Link>
@@ -58,72 +72,120 @@ export default async function BuyerTicketDetailPage({
           </div>
         </div>
 
-        <article className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.45)] sm:rounded-[36px] print:rounded-none print:border-0 print:shadow-none">
-          <div className="bg-[linear-gradient(135deg,#0f172a,#1d4ed8)] px-5 py-6 text-white sm:px-8 sm:py-10">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-100">
-              AWA Tickets
-            </p>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">{event.title}</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">
-              {ticket.qr_available
-                ? "Présentez ce QR code à l’entrée. Vous pouvez aussi télécharger le PDF canonique du billet."
-                : "Votre billet est confirmé. Le QR sera débloqué 12h avant l’événement, mais vous pouvez déjà conserver cette page ou le PDF."}
-            </p>
-          </div>
+        <article className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,#eff6ff,transparent_28%),linear-gradient(180deg,#ffffff,#f8fafc)] shadow-[0_40px_100px_-52px_rgba(15,23,42,0.45)] sm:rounded-[40px] print:rounded-none print:border-0 print:bg-white print:shadow-none">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,64,175,0.94))] print:hidden" />
+          <div className="pointer-events-none absolute -left-16 top-20 h-44 w-44 rounded-full bg-white/10 blur-3xl print:hidden" />
+          <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-amber-300/10 blur-3xl print:hidden" />
 
-          <div className="grid gap-6 px-5 py-5 sm:gap-8 sm:px-8 sm:py-8 md:grid-cols-[minmax(0,260px)_1fr] print:grid-cols-[280px_1fr]">
-            <div className="space-y-4">
-              {ticket.qr_available && ticket.qr_payload ? (
-                <TicketQr payload={ticket.qr_payload} size={220} className="mx-auto w-full max-w-[240px] sm:max-w-[280px]" />
-              ) : (
-                <div className="mx-auto flex w-full max-w-[280px] items-center justify-center rounded-3xl border border-dashed border-amber-200 bg-amber-50 px-6 py-10 text-center text-sm text-amber-700">
-                  QR disponible {ticket.qr_release_at ? formatRelative(ticket.qr_release_at) : "12h avant l'événement"}
-                </div>
-              )}
-              <div className="rounded-3xl bg-slate-50 px-5 py-4 text-center text-sm text-slate-600 sm:text-left">
-                <p className="font-semibold text-slate-900">{ticket.ticket_number}</p>
-                <p className="mt-1">Statut: {ticket.delivery_state?.replaceAll("_", " ") || ticket.status}</p>
+          <div className="relative px-5 pb-5 pt-5 sm:px-8 sm:pb-8 sm:pt-8">
+            <div className="flex flex-wrap items-start justify-between gap-4 text-white">
+              <div className="max-w-2xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-blue-100">AWA Tickets</p>
+                <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">{event.title}</h1>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-blue-100/90 sm:text-base">
+                  {ticket.qr_available
+                    ? "Votre billet est actif. Présentez ce QR à l’entrée ou gardez le PDF officiel hors ligne."
+                    : "Votre billet est confirmé. Conservez ce pass ; le QR s’affichera automatiquement quand la fenêtre d’ouverture commencera."}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 self-start">
+                <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90">
+                  {category}
+                </span>
+                <span className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${status.badgeClass}`}>
+                  {status.label}
+                </span>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <InfoCard label="Événement" value={event.title} />
-                <InfoCard label="Tarif" value={tier?.name ?? "Billet"} />
-                <InfoCard label="Lieu" value={venue} />
-                <InfoCard label="Début" value={formatDateTime(event.starts_at)} />
+            <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,360px)_1fr] print:mt-4 print:grid-cols-[320px_1fr]">
+              <div className="rounded-[30px] bg-[linear-gradient(180deg,#0f172a,#111827)] p-4 text-white shadow-[0_24px_60px_-38px_rgba(15,23,42,0.85)] sm:p-5 print:border print:border-slate-200">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-blue-100/80">Pass mobile</p>
+                    <p className="mt-1 text-lg font-semibold text-white">{tier?.name ?? "Billet"}</p>
+                  </div>
+                  {priceLabel ? (
+                    <span className="rounded-full bg-amber-300 px-3 py-1 text-xs font-semibold text-slate-950">
+                      {priceLabel}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="mt-4 rounded-[28px] bg-white/95 p-4 text-slate-950 shadow-inner sm:p-5">
+                  {ticket.qr_available && ticket.qr_payload ? (
+                    <TicketQr payload={ticket.qr_payload} size={240} className="mx-auto w-full max-w-[260px]" />
+                  ) : (
+                    <div className="mx-auto flex min-h-[260px] w-full max-w-[260px] flex-col items-center justify-center rounded-[28px] border border-dashed border-amber-300 bg-amber-50 px-6 text-center">
+                      <span className="rounded-full bg-amber-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-900">
+                        QR verrouillé
+                      </span>
+                      <p className="mt-4 text-sm font-semibold text-slate-900">
+                        QR disponible {ticket.qr_release_at ? formatRelative(ticket.qr_release_at) : "12h avant l'événement"}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        Le billet reste valable. Le même QR apparaîtra ici, dans le lien ticket et dans le PDF.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    <PassStat label="Ticket" value={ticket.ticket_number} />
+                    <PassStat label="Portes" value={ticket.entry_gates?.join(" / ") || "À confirmer"} />
+                    <PassStat label="Début" value={formatDateTime(event.starts_at)} />
+                    <PassStat label="Lieu" value={event.venue_name || "À confirmer"} />
+                  </div>
+                </div>
               </div>
 
-              {ticket.entry_gates?.length ? (
-                <div className="rounded-3xl border border-slate-200 p-5">
-                  <p className="text-sm text-slate-500">Portes</p>
-                  <p className="mt-2 text-lg font-semibold text-slate-950">
-                    {ticket.entry_gates.join(" / ")}
+              <div className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <InfoCard label="Date et heure" value={formatDateTime(event.starts_at)} accent="blue" />
+                  <InfoCard label="Lieu" value={venue} accent="amber" />
+                  <InfoCard label="Tarif" value={tier?.name ?? "Billet"} accent="slate" />
+                  <InfoCard
+                    label="Ouverture des portes"
+                    value={event.doors_open_at ? formatDateTime(event.doors_open_at) : "À confirmer"}
+                    accent="blue"
+                  />
+                </div>
+
+                <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+                  <div className="rounded-[28px] border border-slate-200 bg-white/80 p-5 backdrop-blur-sm">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Lecture rapide</p>
+                    <div className="mt-4 space-y-3">
+                      <QuickRow label="Statut du billet" value={status.labelLong} />
+                      <QuickRow label="Politique QR" value={qrAvailability} />
+                      <QuickRow label="Accès" value={ticket.entry_gates?.join(" / ") || "Portes communiquées plus tard"} />
+                      {priceLabel ? <QuickRow label="Montant payé" value={priceLabel} /> : null}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/70 p-5 text-sm leading-6 text-slate-600">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Acheteur</p>
+                    <p className="mt-3 text-base font-semibold text-slate-950">{buyer.fullName || "Acheteur AWA Tickets"}</p>
+                    <p>{buyer.phone}</p>
+                    {buyer.email && <p>{buyer.email}</p>}
+                  </div>
+                </div>
+
+                <div
+                  className={`rounded-[28px] p-5 text-sm leading-6 ${
+                    ticket.qr_available
+                      ? "border border-emerald-200 bg-emerald-50 text-emerald-900"
+                      : "border border-amber-200 bg-amber-50 text-amber-900"
+                  }`}
+                >
+                  <p className="font-semibold">
+                    {ticket.qr_available ? "Billet prêt pour l’entrée" : "Billet confirmé, QR différé"}
+                  </p>
+                  <p className="mt-2">
+                    {ticket.qr_available
+                      ? "Conservez ce pass, le lien ticket et le PDF dans vos favoris. Le même QR est exposé dans tous les supports."
+                      : `Le QR est masqué pour limiter le partage avant l’événement. Il deviendra visible ${ticket.qr_release_at ? formatRelative(ticket.qr_release_at) : "12h avant l'événement"}.`}
                   </p>
                 </div>
-              ) : null}
-
-              {event.doors_open_at && (
-                <div className="rounded-3xl border border-slate-200 p-5">
-                  <p className="text-sm text-slate-500">Ouverture des portes</p>
-                  <p className="mt-2 text-lg font-semibold text-slate-950">
-                    {formatDateTime(event.doors_open_at)}
-                  </p>
-                </div>
-              )}
-
-              <div className="rounded-3xl border border-dashed border-slate-300 p-5 text-sm leading-6 text-slate-600">
-                <p className="font-semibold text-slate-900">Acheteur</p>
-                <p className="mt-2">{buyer.fullName || "Acheteur AWA Tickets"}</p>
-                <p>{buyer.phone}</p>
-                {buyer.email && <p>{buyer.email}</p>}
               </div>
-
-              {!ticket.qr_available && ticket.qr_release_at ? (
-                <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-800">
-                  QR verrouillé pour limiter le partage avant l&apos;événement. Il sera visible {formatRelative(ticket.qr_release_at)}.
-                </div>
-              ) : null}
             </div>
           </div>
         </article>
@@ -132,13 +194,96 @@ export default async function BuyerTicketDetailPage({
   );
 }
 
-function InfoCard({ label, value }: { label: string; value: string }) {
+function InfoCard({
+  label,
+  value,
+  accent = "slate",
+}: {
+  label: string;
+  value: string;
+  accent?: "blue" | "amber" | "slate";
+}) {
+  const accentClass =
+    accent === "blue"
+      ? "bg-blue-50 text-blue-700"
+      : accent === "amber"
+        ? "bg-amber-50 text-amber-700"
+        : "bg-slate-100 text-slate-600";
+
   return (
-    <div className="rounded-3xl border border-slate-200 p-4 sm:p-5">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-sm sm:normal-case sm:tracking-normal">
+    <div className="rounded-[24px] border border-slate-200 bg-white/80 p-4 backdrop-blur-sm sm:p-5">
+      <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${accentClass}`}>
         {label}
-      </p>
-      <p className="mt-2 text-base font-semibold leading-6 text-slate-950 sm:text-lg">{value}</p>
+      </span>
+      <p className="mt-3 text-base font-semibold leading-6 text-slate-950 sm:text-lg">{value}</p>
     </div>
   );
+}
+
+function PassStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-100/90 px-3 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-2 text-sm font-semibold text-slate-950">{value}</p>
+    </div>
+  );
+}
+
+function QuickRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-1 rounded-2xl bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+      <p className="text-sm font-semibold text-slate-950 sm:text-right">{value}</p>
+    </div>
+  );
+}
+
+function statusMeta(
+  deliveryState?: string,
+  fallbackStatus?: string,
+): { label: string; labelLong: string; badgeClass: string } {
+  switch (deliveryState) {
+    case "issued_qr_locked":
+      return {
+        label: "QR bientôt",
+        labelLong: "Billet confirmé · QR disponible avant l’événement",
+        badgeClass: "bg-amber-300 text-slate-950",
+      };
+    case "issued_qr_ready":
+      return {
+        label: "QR prêt",
+        labelLong: "Billet confirmé · QR disponible maintenant",
+        badgeClass: "bg-emerald-300 text-slate-950",
+      };
+    case "used":
+      return {
+        label: "Utilisé",
+        labelLong: "Billet déjà scanné",
+        badgeClass: "bg-slate-200 text-slate-900",
+      };
+    case "cancelled":
+      return {
+        label: "Annulé",
+        labelLong: "Billet annulé",
+        badgeClass: "bg-red-300 text-slate-950",
+      };
+    case "paid_issuing":
+      return {
+        label: "Émission",
+        labelLong: "Paiement reçu · émission en cours",
+        badgeClass: "bg-sky-300 text-slate-950",
+      };
+    case "awaiting_payment":
+      return {
+        label: "Paiement",
+        labelLong: "En attente de paiement",
+        badgeClass: "bg-white/20 text-white",
+      };
+    default:
+      return {
+        label: fallbackStatus || "Billet",
+        labelLong: fallbackStatus || "Billet",
+        badgeClass: "bg-emerald-300 text-slate-950",
+      };
+  }
 }

@@ -40,7 +40,7 @@ export default async function BuyerTicketsPage() {
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Wallet acheteur</p>
               <h1 className="mt-2 text-4xl font-semibold tracking-tight text-slate-950">Mes billets et commandes</h1>
               <p className="mt-3 text-base leading-7 text-slate-600">
-                Cette page relit les endpoints acheteur avec le numéro sélectionné pour confirmer que les billets sont visibles après paiement.
+                Retrouvez ici vos commandes, vos billets et l&apos;état de disponibilité du QR sans repasser par le checkout.
               </p>
             </div>
 
@@ -113,13 +113,21 @@ export default async function BuyerTicketsPage() {
                       </div>
                     ) : (
                       tickets.map((ticket) => (
-                        <div key={ticket.id} className="rounded-3xl border border-slate-200 p-4">
+                        <div
+                          key={ticket.id}
+                          className="overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,#eff6ff,transparent_32%),linear-gradient(180deg,#ffffff,#f8fafc)] p-4 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)]"
+                        >
                           <div className="grid gap-4 md:grid-cols-[180px_1fr]">
                             {ticket.qr_available && ticket.qr_payload ? (
                               <TicketQr payload={ticket.qr_payload} size={180} className="mx-auto md:mx-0" />
                             ) : (
-                              <div className="mx-auto flex h-[180px] w-[180px] items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 text-center text-sm text-slate-500 md:mx-0">
-                                QR disponible {ticket.qr_release_at ? formatRelative(ticket.qr_release_at) : "12h avant l'événement"}
+                              <div className="mx-auto flex h-[180px] w-[180px] flex-col items-center justify-center rounded-[28px] border border-dashed border-amber-300 bg-amber-50 p-4 text-center text-sm text-amber-800 md:mx-0">
+                                <span className="rounded-full bg-amber-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-900">
+                                  QR verrouillé
+                                </span>
+                                <span className="mt-3">
+                                  Disponible {ticket.qr_release_at ? formatRelative(ticket.qr_release_at) : "12h avant l'événement"}
+                                </span>
                               </div>
                             )}
                             <div>
@@ -128,6 +136,9 @@ export default async function BuyerTicketsPage() {
                                   <p className="text-sm text-slate-500">{ticket.ticket_number}</p>
                                   <p className="mt-1 text-lg font-semibold text-slate-950">
                                     {ticket.event?.title || ticket.events?.title || "Billet"}
+                                  </p>
+                                  <p className="mt-2 text-sm font-medium text-slate-500">
+                                    {ticket.tier?.name || ticket.event?.category || "Accès général"}
                                   </p>
                                 </div>
                                 <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${statusBadgeClass(ticket.delivery_state)}`}>

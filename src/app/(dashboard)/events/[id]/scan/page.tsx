@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api-client";
 import { PageHeader } from "@/components/layout/page-header";
 import { EventOpsConsole } from "@/components/events/event-ops-console";
+import { ScanOpsLiveRefresh } from "@/components/events/scan-ops-live-refresh";
 import { ScanSessionManager } from "@/components/events/scan-session-manager";
 import type { ScanOpsResponse, ScanSession, ScanStats, StaffUser } from "@/lib/types";
 
@@ -20,6 +21,8 @@ export default async function ScanPage({
 
   return (
     <div className="space-y-6">
+      <ScanOpsLiveRefresh />
+
       <PageHeader
         title="Opérations de scan"
         breadcrumbs={[

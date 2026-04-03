@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { createEventAction, updateEventAction } from "@/actions/event-actions";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { ImageUpload } from "@/components/events/image-upload";
+import { TicketDesignPicker } from "@/components/events/ticket-design-picker";
+import { normalizeTicketDesignTemplate, recommendedTicketDesign, type TicketDesignTemplate } from "@/lib/ticket-designs";
 import type { Event } from "@/lib/types";
 
 interface TierInput {
@@ -37,6 +39,10 @@ export function EventForm({ categories, initialData }: EventFormProps) {
   const action = isEdit ? updateEventAction : createEventAction;
   const [state, formAction, pending] = useActionState(action, null);
   const [coverImageUrl, setCoverImageUrl] = useState(initialData?.cover_image_url || "");
+  const [category, setCategory] = useState(initialData?.category || "concert");
+  const [ticketDesignTemplate, setTicketDesignTemplate] = useState<TicketDesignTemplate>(
+    normalizeTicketDesignTemplate(initialData?.ticket_design_template, initialData?.category || "concert")
+  );
 
   const [tiers, setTiers] = useState<TierInput[]>(
     initialData?.tiers?.map((t) => ({
@@ -49,6 +55,13 @@ export function EventForm({ categories, initialData }: EventFormProps) {
       max_per_order: t.max_per_order,
     })) || [newTier()]
   );
+
+  function handleCategoryChange(nextCategory: string) {
+    setCategory(nextCategory);
+    if (!initialData && ticketDesignTemplate === recommendedTicketDesign(category)) {
+      setTicketDesignTemplate(recommendedTicketDesign(nextCategory));
+    }
+  }
 
   function addTier() {
     setTiers([...tiers, newTier()]);
@@ -81,6 +94,7 @@ export function EventForm({ categories, initialData }: EventFormProps) {
           }))
         )}
       />
+      <input type="hidden" name="ticket_design_template" value={ticketDesignTemplate} />
 
       {state?.error && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{state.error}</div>
@@ -101,7 +115,13 @@ export function EventForm({ categories, initialData }: EventFormProps) {
 
         <div className="space-y-2">
           <label htmlFor="category" className="text-sm font-medium">Catégorie</label>
-          <select id="category" name="category" defaultValue={initialData?.category || "concert"} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+          <select
+            id="category"
+            name="category"
+            value={category}
+            onChange={(event) => handleCategoryChange(event.target.value)}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
             {categories.map((cat) => (
               <option key={cat} value={cat}>{CATEGORY_LABELS[cat] || cat}</option>
             ))}
@@ -121,6 +141,13 @@ export function EventForm({ categories, initialData }: EventFormProps) {
           />
           <ImageUpload value={coverImageUrl || null} onChange={(url) => setCoverImageUrl(url || "")} />
         </div>
+
+        <TicketDesignPicker
+          category={category}
+          coverImageUrl={coverImageUrl || null}
+          value={ticketDesignTemplate}
+          onChange={setTicketDesignTemplate}
+        />
       </fieldset>
 
       <fieldset className="space-y-4 rounded-lg border p-4">

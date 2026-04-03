@@ -2,6 +2,11 @@ export type EventStatus = "draft" | "published" | "sold_out" | "completed" | "ca
 export type KycStatus = "pending" | "submitted" | "verified" | "rejected";
 export type PayoutStatus = "pending" | "processing" | "paid" | "failed";
 export type QrReleaseMode = "automatic" | "12h_before_event";
+export type TicketDesignTemplate =
+  | "stadium_classic"
+  | "night_pulse"
+  | "sunset_heat"
+  | "minimal_ink";
 
 export interface OrganizerSession {
   id: string;
@@ -54,6 +59,7 @@ export interface Event {
   ends_at: string;
   doors_open_at: string | null;
   qr_release_mode: QrReleaseMode;
+  ticket_design_template: TicketDesignTemplate;
   timezone: string;
   cover_image_url: string | null;
   gallery: string[];
@@ -110,9 +116,11 @@ export interface BuyerTicket {
     ends_at: string;
     doors_open_at?: string | null;
     qr_release_mode?: QrReleaseMode;
+    ticket_design_template?: TicketDesignTemplate;
     venue_name?: string | null;
     venue_city?: string | null;
     venue_address?: string | null;
+    cover_image_url?: string | null;
   } | null;
   tier?: {
     id: string;

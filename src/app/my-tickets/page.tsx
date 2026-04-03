@@ -6,6 +6,7 @@ import { TicketQr } from "@/components/buyer/ticket-qr";
 import { buyerApiFetch } from "@/lib/buyer-api";
 import { getBuyerIdentity } from "@/lib/buyer-session";
 import { formatCFA, formatDateTime, formatRelative } from "@/lib/format";
+import { getTicketDesignPreset } from "@/lib/ticket-designs";
 import type { BuyerOrder, BuyerTicket } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -112,10 +113,12 @@ export default async function BuyerTicketsPage() {
                         Aucun billet visible pour le moment. Si le paiement est en cours, revenez après la confirmation.
                       </div>
                     ) : (
-                      tickets.map((ticket) => (
+                      tickets.map((ticket) => {
+                        const design = getTicketDesignPreset(ticket.event?.ticket_design_template, ticket.event?.category);
+                        return (
                         <div
                           key={ticket.id}
-                          className="overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,#eff6ff,transparent_32%),linear-gradient(180deg,#ffffff,#f8fafc)] p-4 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)]"
+                          className={`overflow-hidden rounded-[28px] border p-4 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)] ${design.articleClass}`}
                         >
                           <div className="grid gap-4 md:grid-cols-[180px_1fr]">
                             {ticket.qr_available && ticket.qr_payload ? (
@@ -175,7 +178,7 @@ export default async function BuyerTicketsPage() {
                             </div>
                           </div>
                         </div>
-                      ))
+                      )})
                     )}
                   </div>
                 </div>

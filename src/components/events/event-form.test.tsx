@@ -31,6 +31,7 @@ describe("EventForm", () => {
           ends_at: "2026-04-10T22:00:00+00:00",
           doors_open_at: null,
           qr_release_mode: "12h_before_event",
+          ticket_design_template: "stadium_classic",
           timezone: "Africa/Dakar",
           cover_image_url: null,
           gallery: [],

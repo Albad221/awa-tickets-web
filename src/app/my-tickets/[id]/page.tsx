@@ -6,6 +6,7 @@ import { TicketQr } from "@/components/buyer/ticket-qr";
 import { buyerApiFetch } from "@/lib/buyer-api";
 import { getBuyerIdentity } from "@/lib/buyer-session";
 import { formatCFA, formatDateTime, formatRelative } from "@/lib/format";
+import { getTicketDesignPreset } from "@/lib/ticket-designs";
 import type { BuyerTicket } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -44,11 +45,15 @@ export default async function BuyerTicketDetailPage({
       : null;
   const status = statusMeta(ticket.delivery_state, ticket.status);
   const category = event.category || "Billet événement";
+  const design = getTicketDesignPreset(event.ticket_design_template, event.category);
   const qrAvailability = ticket.qr_available
     ? "Disponible maintenant"
     : ticket.qr_release_at
       ? `Ouverture ${formatRelative(ticket.qr_release_at)}`
       : "12h avant l'événement";
+  const heroBackground = event.cover_image_url
+    ? `${design.heroGradient}, url(${event.cover_image_url})`
+    : design.heroGradient;
 
   return (
     <BuyerSiteShell buyer={buyer}>
@@ -72,24 +77,28 @@ export default async function BuyerTicketDetailPage({
           </div>
         </div>
 
-        <article className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,#eff6ff,transparent_28%),linear-gradient(180deg,#ffffff,#f8fafc)] shadow-[0_40px_100px_-52px_rgba(15,23,42,0.45)] sm:rounded-[40px] print:rounded-none print:border-0 print:bg-white print:shadow-none">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,64,175,0.94))] print:hidden" />
+        <article className={`relative overflow-hidden rounded-[28px] border shadow-[0_40px_100px_-52px_rgba(15,23,42,0.45)] sm:rounded-[40px] print:rounded-none print:border-0 print:bg-white print:shadow-none ${design.articleClass}`}>
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-cover bg-center print:hidden"
+            style={{ backgroundImage: heroBackground }}
+          />
+          <div className={`pointer-events-none absolute inset-x-0 top-0 h-48 print:hidden ${design.heroOverlayClass}`} />
           <div className="pointer-events-none absolute -left-16 top-20 h-44 w-44 rounded-full bg-white/10 blur-3xl print:hidden" />
           <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-amber-300/10 blur-3xl print:hidden" />
 
           <div className="relative px-5 pb-5 pt-5 sm:px-8 sm:pb-8 sm:pt-8">
-            <div className="flex flex-wrap items-start justify-between gap-4 text-white">
+            <div className={`flex flex-wrap items-start justify-between gap-4 ${design.heroTextClass}`}>
               <div className="max-w-2xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-blue-100">AWA Tickets</p>
+                <p className={`text-xs font-semibold uppercase tracking-[0.32em] ${design.heroMutedClass}`}>AWA Tickets</p>
                 <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">{event.title}</h1>
-                <p className="mt-3 max-w-xl text-sm leading-6 text-blue-100/90 sm:text-base">
+                <p className={`mt-3 max-w-xl text-sm leading-6 sm:text-base ${design.heroMutedClass}`}>
                   {ticket.qr_available
                     ? "Votre billet est actif. Présentez ce QR à l’entrée ou gardez le PDF officiel hors ligne."
                     : "Votre billet est confirmé. Conservez ce pass ; le QR s’affichera automatiquement quand la fenêtre d’ouverture commencera."}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 self-start">
-                <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90">
+                <span className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${design.pillClass}`}>
                   {category}
                 </span>
                 <span className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${status.badgeClass}`}>
@@ -99,20 +108,20 @@ export default async function BuyerTicketDetailPage({
             </div>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,360px)_1fr] print:mt-4 print:grid-cols-[320px_1fr]">
-              <div className="rounded-[30px] bg-[linear-gradient(180deg,#0f172a,#111827)] p-4 text-white shadow-[0_24px_60px_-38px_rgba(15,23,42,0.85)] sm:p-5 print:border print:border-slate-200">
+              <div className={`rounded-[30px] p-4 shadow-[0_24px_60px_-38px_rgba(15,23,42,0.85)] sm:p-5 print:border print:border-slate-200 ${design.passShellClass}`}>
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-blue-100/80">Pass mobile</p>
-                    <p className="mt-1 text-lg font-semibold text-white">{tier?.name ?? "Billet"}</p>
+                    <p className={`text-[11px] uppercase tracking-[0.28em] ${design.heroMutedClass}`}>Pass mobile</p>
+                    <p className="mt-1 text-lg font-semibold">{tier?.name ?? "Billet"}</p>
                   </div>
                   {priceLabel ? (
-                    <span className="rounded-full bg-amber-300 px-3 py-1 text-xs font-semibold text-slate-950">
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${design.pricePillClass}`}>
                       {priceLabel}
                     </span>
                   ) : null}
                 </div>
 
-                <div className="mt-4 rounded-[28px] bg-white/95 p-4 text-slate-950 shadow-inner sm:p-5">
+                <div className={`mt-4 rounded-[28px] p-4 shadow-inner sm:p-5 ${design.passCardClass}`}>
                   {ticket.qr_available && ticket.qr_payload ? (
                     <TicketQr payload={ticket.qr_payload} size={240} className="mx-auto w-full max-w-[260px]" />
                   ) : (
@@ -140,13 +149,13 @@ export default async function BuyerTicketDetailPage({
 
               <div className="space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <InfoCard label="Date et heure" value={formatDateTime(event.starts_at)} accent="blue" />
-                  <InfoCard label="Lieu" value={venue} accent="amber" />
-                  <InfoCard label="Tarif" value={tier?.name ?? "Billet"} accent="slate" />
+                  <InfoCard label="Date et heure" value={formatDateTime(event.starts_at)} accent={design.infoCardTone} />
+                  <InfoCard label="Lieu" value={venue} accent={design.infoCardTone} />
+                  <InfoCard label="Tarif" value={tier?.name ?? "Billet"} accent={design.infoCardTone} />
                   <InfoCard
                     label="Ouverture des portes"
                     value={event.doors_open_at ? formatDateTime(event.doors_open_at) : "À confirmer"}
-                    accent="blue"
+                    accent={design.infoCardTone}
                   />
                 </div>
 

@@ -48,7 +48,7 @@ export default async function BuyerTicketDetailPage({
           </Link>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
-              href={`/api/buyer/tickets/${ticket.id}/pdf`}
+              href={ticket.pdf_url || `/api/buyer/tickets/${ticket.id}/pdf`}
               target="_blank"
               className="inline-flex h-11 items-center justify-center rounded-full border border-slate-300 px-5 text-sm font-semibold text-slate-900 hover:border-slate-400"
             >

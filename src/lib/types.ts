@@ -101,6 +101,7 @@ export interface BuyerTicket {
   entry_gates?: string[];
   ticket_url?: string | null;
   wallet_url?: string | null;
+  pdf_url?: string | null;
   event?: {
     id: string;
     title: string;

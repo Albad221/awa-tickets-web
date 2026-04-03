@@ -154,7 +154,7 @@ export default async function BuyerTicketsPage() {
                                   Voir le billet
                                 </Link>
                                 <Link
-                                  href={`/api/buyer/tickets/${ticket.id}/pdf`}
+                                  href={ticket.pdf_url || `/api/buyer/tickets/${ticket.id}/pdf`}
                                   target="_blank"
                                   className="inline-flex h-10 items-center justify-center rounded-full border border-slate-300 px-4 text-sm font-semibold text-slate-900 hover:border-slate-400"
                                 >

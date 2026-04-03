@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { verifyBuyerClaimToken } from "@/lib/buyer-link";
 
 const API_BASE_URL =
   process.env.TICKETS_API_URL ||
@@ -10,14 +11,27 @@ const INTERNAL_API_KEY =
   process.env.TICKETS_INTERNAL_API_KEY ||
   process.env.INTERNAL_API_KEY ||
   "";
+const BUYER_LINK_SECRET =
+  process.env.BUYER_LINK_SECRET ||
+  process.env.TICKETS_INTERNAL_API_KEY ||
+  process.env.INTERNAL_API_KEY ||
+  "";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   const store = await cookies();
-  const phone = store.get("buyer_phone")?.value;
+  let phone = store.get("buyer_phone")?.value;
+
+  if (!phone) {
+    const claim = new URL(request.url).searchParams.get("claim");
+    if (claim) {
+      const verified = await verifyBuyerClaimToken(claim, BUYER_LINK_SECRET);
+      phone = verified?.phone || undefined;
+    }
+  }
 
   if (!phone) {
     return NextResponse.json({ error: "Acheteur non sélectionné" }, { status: 401 });

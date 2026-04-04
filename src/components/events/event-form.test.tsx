@@ -38,6 +38,13 @@ describe("EventForm", () => {
           allow_transfers: true,
           allow_refunds: false,
           refund_deadline_hours: 48,
+          review_status: "approved",
+          effective_fee_percent: 7,
+          effective_fee_min_xof: 100,
+          staffing_mode: "awa_provided",
+          requested_staff_count: 4,
+          requested_shift_count: 2,
+          staffing_notes: "3 portes à couvrir",
           tags: [],
           currency: "XOF",
           status: "draft",
@@ -66,6 +73,8 @@ describe("EventForm", () => {
     expect(screen.getByText("Tarifs *")).toBeInTheDocument();
     expect(screen.getByDisplayValue("VIP")).toBeInTheDocument();
     expect(screen.getByDisplayValue("15000")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("4")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("3 portes à couvrir")).toBeInTheDocument();
 
     const tiersInput = screen.getByDisplayValue(/tier-1/);
     expect(tiersInput).toHaveAttribute("name", "tiers");

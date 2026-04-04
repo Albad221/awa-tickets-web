@@ -32,6 +32,10 @@ export async function createEventAction(
     cover_image_url: (formData.get("cover_image_url") as string) || null,
     allow_transfers: formData.get("allow_transfers") === "on",
     allow_refunds: formData.get("allow_refunds") === "on",
+    staffing_mode: (formData.get("staffing_mode") as string) || "organizer_self_staff",
+    requested_staff_count: Number(formData.get("requested_staff_count") || 0),
+    requested_shift_count: Number(formData.get("requested_shift_count") || 1),
+    staffing_notes: (formData.get("staffing_notes") as string) || null,
     currency: "XOF",
     tiers,
   };
@@ -89,6 +93,10 @@ export async function updateEventAction(
   // Booleans — unchecked checkboxes don't submit, so explicitly set false
   body.allow_transfers = formData.get("allow_transfers") === "on";
   body.allow_refunds = formData.get("allow_refunds") === "on";
+  body.staffing_mode = (formData.get("staffing_mode") as string) || "organizer_self_staff";
+  body.requested_staff_count = Number(formData.get("requested_staff_count") || 0);
+  body.requested_shift_count = Number(formData.get("requested_shift_count") || 1);
+  body.staffing_notes = (formData.get("staffing_notes") as string) || null;
   body.tiers = tiers;
 
   if (tiers.length === 0) {
@@ -105,12 +113,14 @@ export async function updateEventAction(
   }
 }
 
-export async function publishEventAction(eventId: string): Promise<{ error?: string }> {
+export async function publishEventAction(eventId: string): Promise<{ error?: string; submittedForReview?: boolean }> {
   try {
-    await apiFetch(`/api/events/${eventId}/publish`, { method: "POST" });
+    const response = await apiFetch<{ status?: string }>(`/api/events/${eventId}/publish`, { method: "POST" });
     revalidatePath(`/events/${eventId}`);
     revalidatePath("/events");
-    return {};
+    return response.status === "submitted_for_review"
+      ? { submittedForReview: true }
+      : {};
   } catch (error) {
     if (isRedirectError(error)) throw error;
     return { error: error instanceof Error ? error.message : "Erreur lors de la publication" };

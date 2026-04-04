@@ -1,7 +1,11 @@
 export type EventStatus = "draft" | "published" | "sold_out" | "completed" | "cancelling" | "cancelled";
 export type KycStatus = "pending" | "submitted" | "verified" | "rejected";
 export type PayoutStatus = "pending" | "processing" | "paid" | "failed";
+export type ApprovalStatus = "pending_review" | "approved" | "rejected" | "suspended";
+export type EventReviewStatus = "not_submitted" | "pending_review" | "approved" | "rejected";
 export type QrReleaseMode = "automatic" | "12h_before_event";
+export type StaffingMode = "organizer_self_staff" | "awa_provided";
+export type StaffingQuoteStatus = "not_requested" | "requested" | "quoted" | "confirmed" | "cancelled";
 export type TicketDesignTemplate =
   | "stadium_classic"
   | "night_pulse"
@@ -22,6 +26,7 @@ export interface OrganizerSession {
   payout_phone: string | null;
   payout_method: string | null;
   kyc_status: KycStatus;
+  approval_status?: ApprovalStatus;
   status: string;
   created_at: string;
 }
@@ -66,6 +71,19 @@ export interface Event {
   allow_transfers: boolean;
   allow_refunds: boolean;
   refund_deadline_hours: number;
+  review_status?: EventReviewStatus;
+  review_notes?: string | null;
+  platform_fee_percent_override?: number | null;
+  effective_fee_percent?: number;
+  effective_fee_min_xof?: number;
+  staffing_mode?: StaffingMode;
+  requested_staff_count?: number;
+  requested_shift_count?: number;
+  staffing_notes?: string | null;
+  confirmed_staff_count?: number;
+  staff_rate_xof?: number | null;
+  staffing_charge_total?: number;
+  staffing_quote_status?: StaffingQuoteStatus;
   tags: string[];
   currency: string;
   status: EventStatus;
@@ -275,6 +293,7 @@ export interface PayoutBatch {
   organizer_id: string;
   total_gross: number;
   total_fee: number;
+  total_adjustments?: number;
   total_net: number;
   currency: string;
   status: PayoutStatus;

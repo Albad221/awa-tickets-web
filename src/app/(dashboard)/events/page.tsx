@@ -3,8 +3,14 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { PageHeader } from "@/components/layout/page-header";
 import { formatDate } from "@/lib/format";
-import { EVENT_STATUS_LABELS, EVENT_STATUS_COLORS, CATEGORY_LABELS } from "@/lib/constants";
-import type { Event, EventStatus } from "@/lib/types";
+import {
+  CATEGORY_LABELS,
+  EVENT_REVIEW_STATUS_COLORS,
+  EVENT_REVIEW_STATUS_LABELS,
+  EVENT_STATUS_COLORS,
+  EVENT_STATUS_LABELS,
+} from "@/lib/constants";
+import type { Event, EventReviewStatus, EventStatus } from "@/lib/types";
 
 export default async function EventsPage() {
   const data = await apiFetch<{ events: Event[] }>("/api/events?mine=true");
@@ -54,12 +60,17 @@ export default async function EventsPage() {
                 </div>
               )}
               <div className="space-y-1">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${EVENT_STATUS_COLORS[event.status as EventStatus] || ""}`}>
                     {EVENT_STATUS_LABELS[event.status as EventStatus] || event.status}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {CATEGORY_LABELS[event.category] || event.category}
+                  </span>
+                </div>
+                <div>
+                  <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${EVENT_REVIEW_STATUS_COLORS[(event.review_status || "not_submitted") as EventReviewStatus] || ""}`}>
+                    {EVENT_REVIEW_STATUS_LABELS[(event.review_status || "not_submitted") as EventReviewStatus] || event.review_status}
                   </span>
                 </div>
                 <h3 className="font-semibold group-hover:text-primary transition-colors">

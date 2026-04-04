@@ -2,7 +2,7 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { startBuyerCheckoutAction } from "@/actions/buyer-actions";
-import { formatCFA } from "@/lib/format";
+import { calculateServiceFee, formatCFA } from "@/lib/format";
 import type { BuyerIdentity } from "@/lib/buyer-session";
 import type { Event, TicketTier } from "@/lib/types";
 
@@ -29,7 +29,11 @@ export function PurchasePanel({
 
   const maxQuantity = selectedTier ? Math.min(selectedTier.max_per_order, selectedTier.available ?? selectedTier.capacity) : 1;
   const effectiveQuantity = Math.min(quantity, Math.max(1, maxQuantity));
-  const total = selectedTier ? selectedTier.price * effectiveQuantity : 0;
+  const subtotal = selectedTier ? selectedTier.price * effectiveQuantity : 0;
+  const effectiveFeePercent = event.effective_fee_percent ?? 7;
+  const effectiveFeeMin = event.effective_fee_min_xof ?? 100;
+  const serviceFee = calculateServiceFee(subtotal, effectiveFeePercent, effectiveFeeMin);
+  const total = subtotal + serviceFee;
 
   return (
     <form action={formAction} className="space-y-5 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_-32px_rgba(15,23,42,0.45)]">
@@ -135,6 +139,12 @@ export function PurchasePanel({
             <p className="mt-1 text-3xl font-semibold">
               {selectedTier ? (selectedTier.price === 0 ? "Gratuit" : formatCFA(total)) : "—"}
             </p>
+            {selectedTier && selectedTier.price > 0 && (
+              <div className="mt-3 space-y-1 text-xs text-slate-300">
+                <p>Sous-total : {formatCFA(subtotal)}</p>
+                <p>Frais AWA estimés : {formatCFA(serviceFee)} ({effectiveFeePercent}% min {formatCFA(effectiveFeeMin)})</p>
+              </div>
+            )}
           </div>
           <button
             type="submit"

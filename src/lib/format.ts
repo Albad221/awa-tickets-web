@@ -5,6 +5,14 @@ export function formatCFA(amount: number): string {
   return `${amount.toLocaleString("fr-FR")} CFA`;
 }
 
+export function calculateServiceFee(subtotal: number, feePercent: number, feeMin: number): number {
+  if (!subtotal) {
+    return 0;
+  }
+  const fee = Math.max(Math.floor((subtotal * feePercent) / 100), feeMin);
+  return Math.ceil(fee / 5) * 5;
+}
+
 function safeParse(dateString: string): Date | null {
   const d = new Date(dateString);
   return isValid(d) ? d : null;

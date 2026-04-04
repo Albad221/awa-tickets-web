@@ -40,6 +40,7 @@ export function EventForm({ categories, initialData }: EventFormProps) {
   const [state, formAction, pending] = useActionState(action, null);
   const [coverImageUrl, setCoverImageUrl] = useState(initialData?.cover_image_url || "");
   const [category, setCategory] = useState(initialData?.category || "concert");
+  const [staffingMode, setStaffingMode] = useState(initialData?.staffing_mode || "organizer_self_staff");
   const [ticketDesignTemplate, setTicketDesignTemplate] = useState<TicketDesignTemplate>(
     normalizeTicketDesignTemplate(initialData?.ticket_design_template, initialData?.category || "concert")
   );
@@ -248,6 +249,70 @@ export function EventForm({ categories, initialData }: EventFormProps) {
           <input type="checkbox" name="allow_refunds" defaultChecked={initialData?.allow_refunds ?? false} className="h-4 w-4 rounded border-input" />
           Autoriser les remboursements
         </label>
+      </fieldset>
+
+      <fieldset className="space-y-4 rounded-lg border p-4">
+        <legend className="px-2 text-sm font-semibold">Scan & accueil</legend>
+
+        <div className="space-y-2">
+          <label htmlFor="staffing_mode" className="text-sm font-medium">Qui gère le scan ?</label>
+          <select
+            id="staffing_mode"
+            name="staffing_mode"
+            value={staffingMode}
+            onChange={(event) => setStaffingMode(event.target.value as "organizer_self_staff" | "awa_provided")}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="organizer_self_staff">Mon équipe scanne via l&apos;app AWA</option>
+            <option value="awa_provided">Je veux une équipe de scan AWA</option>
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Vous pouvez continuer à créer l&apos;événement maintenant. Les conditions commerciales et la mise à disposition de staff seront confirmées par l&apos;équipe AWA.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <label htmlFor="requested_staff_count" className="text-sm font-medium">Nombre de scanners souhaité</label>
+            <input
+              id="requested_staff_count"
+              name="requested_staff_count"
+              type="number"
+              min={0}
+              defaultValue={initialData?.requested_staff_count ?? 0}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="requested_shift_count" className="text-sm font-medium">Nombre de shifts</label>
+            <input
+              id="requested_shift_count"
+              name="requested_shift_count"
+              type="number"
+              min={1}
+              defaultValue={initialData?.requested_shift_count ?? 1}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="staffing_notes" className="text-sm font-medium">Notes pour l&apos;équipe opérationnelle</label>
+          <textarea
+            id="staffing_notes"
+            name="staffing_notes"
+            rows={3}
+            defaultValue={initialData?.staffing_notes || ""}
+            placeholder="Ex: 3 portes, contrôle VIP séparé, arrivée des équipes à 17h..."
+            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          />
+        </div>
+
+        {staffingMode === "awa_provided" && (
+          <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Le coût du personnel AWA n&apos;est pas facturé au public. Il sera confirmé par nos admins puis déduit de vos payouts sur cet événement.
+          </div>
+        )}
       </fieldset>
 
       <button
